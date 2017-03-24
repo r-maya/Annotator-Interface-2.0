@@ -1,6 +1,7 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-
+import java.util.ArrayList;
+import java.net.*;
 
 public class FrontEnd{
 	
@@ -14,7 +15,7 @@ public class FrontEnd{
 	ArrayList<MDJ> mdj;
 
 
-	FrontEnd(Socket ss){
+	FrontEnd(Socket ss) throws Exception{
 		this.s = ss;
 		in=new DataInputStream(s.getInputStream());
 		out=new DataOutputStream(s.getOutputStream());
@@ -22,7 +23,7 @@ public class FrontEnd{
 	}
 
 
-	public boolean Login(String usr,String pwd){
+	public boolean Login(String usr,String pwd) throws Exception{
 		this.usr = usr;
 		this.pwd = pwd;
 
@@ -38,10 +39,10 @@ public class FrontEnd{
 
 	}
 
-	public ArrayList<String> get_source_names(){
+	public ArrayList<String> get_source_names()throws Exception{
 
 		out.writeUTF("--names-sources--");
-		int n = Integer.parseInt(in.readUTF())
+		int n = Integer.parseInt(in.readUTF());
 		snames = new ArrayList<String>();
 		for(int i=0; i<n ; i++){
 			snames.add(in.readUTF());
@@ -50,9 +51,9 @@ public class FrontEnd{
 	}
 
 
-	public ArrayList<string> get_target_names(){
+	public ArrayList<String> get_target_names() throws Exception{
 
-		out.writeUTF("--names-targets--")
+		out.writeUTF("--names-targets--");
 		int n = Integer.parseInt(in.readUTF());
 		tnames = new ArrayList<String>();
 		for(int i=0; i<n ; i++){
@@ -61,16 +62,16 @@ public class FrontEnd{
 		return tnames;
 	}
 
-	public String getSourceFile(int x){
+	public void getSourceFile(int x) throws Exception{
 		
 		out.writeUTF("--fetch-source-file--"+x);
 		String inn = in.readUTF();
-		new Thread(new interfetcher(input)).start();
+		new Thread(new interfetcher(inn)).start();
 	}
 
 	//public String get
 
-	public boolean getSentencesforFile(int x){
+	public boolean getSentencesforFile(int x) throws Exception{
 		sdj = new ArrayList<SDJ>();
 		int n = Integer.parseInt(in.readUTF());
 		for(int i=0; i<n ; i++){
@@ -78,22 +79,25 @@ public class FrontEnd{
 		}
 		index = 0; max_index = n-1;
 		mdj = new ArrayList<MDJ> ();
+
+		return true;
 	}
 
-	public String getNextQuestion(){
+	public String getNextQuestion() throws Exception{
 		if(index <= max_index)
-			sdj.get(index).statement;
+			return sdj.get(index).statement;
 		else
 			return "File came to an end";
 	}
 
 	public boolean setPresent(String s_id, String f_id, String usr, int marks){
-		mdj.add(new MDJ(s_id, f_id, usr, marks);
+		mdj.add(new MDJ(s_id, f_id, usr, marks));
+		return true;
 	}
 
-	public boolean submitButton(){
+	public boolean submitButton() throws Exception{
 		out.writeUTF("--store-file-data--");
-		out.writeUTF(mdj.size());
+		out.writeUTF(String.valueOf(mdj.size()));
 		for(int i=0; i<mdj.size(); i++){
 
 			out.writeUTF(mdj.get(i).s_id);
@@ -101,9 +105,10 @@ public class FrontEnd{
 			out.writeUTF(mdj.get(i).usr);
 			out.writeUTF(String.valueOf(mdj.get(i).marks));
 		}
+		String inn = in.readUTF();
+		if(inn.equals("updated-submit-button")) return true;
+		else return false;
 	}
 
-	public static void main(string [] args){
 
-	}
 }
